@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>機會與命運</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <style>
+        /* 設定 Inter 字體 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* 淺灰色背景，作為頁面最底層的顏色 */
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 確保內容垂直置中 */
+            margin: 0;
+            padding: 20px; /* 增加整體內邊距 */
+            box-sizing: border-box; /* 確保內邊距不影響總寬度 */
+            position: relative; /* 為了讓背景 div 能夠相對於 body 定位 */
+            overflow: hidden; /* 防止滾動條 */
+        }
+
+        /* 俄羅斯輪盤背景容器：這個 div 不會旋轉 */
+        #roulette-background {
+            position: absolute; /* 絕對定位，使其獨立於文檔流 */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 俄羅斯輪盤背景圖 */
+            background-image: url('https://bkimg.cdn.bcebos.com/pic/77c6a7efce1b9d16f01edac1ffdeb48f8d5464b0');
+            background-size: cover; /* 覆蓋整個區域 */
+            background-position: center; /* 圖片置中 */
+            background-repeat: no-repeat; /* 不重複 */
+            background-attachment: fixed; /* 背景固定，不隨滾動條滾動 */
+            z-index: -2; /* 確保在內容和疊加層下方 */
+        }
+
+        /* 半透明疊加層：這個層是靜止的，用於讓前景內容更清晰 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* 黑色半透明疊加層 */
+            z-index: -1; /* 確保在內容下方，但在旋轉背景上方 */
+        }
+
+        /* 用於 1:1 規格的容器樣式 */
+        .aspect-ratio-square {
+            position: relative;
+            width: 100%;
+            padding-bottom: 100%; /* 創建 1:1 的高寬比 */
+            overflow: hidden; /* 隱藏超出容器的內容 */
+            max-width: 400px; /* 限制最大寬度 */
+            max-height: 400px; /* 限制最大高度，與寬度相同 */
+            display: flex; /* 使用 Flexbox 佈局內部圖片 */
+            flex-wrap: wrap; /* 允許圖片換行 */
+            justify-content: center; /* 水平居中 */
+            align-items: center; /* 垂直居中 */
+            gap: 8px; /* 圖片之間的間距 */
+        }
+
+        /* 彈出視窗內圖片的基礎樣式 */
+        .aspect-ratio-square img {
+            height: auto; /* 保持圖片比例 */
+            object-fit: contain; /* 確保圖片完整顯示在容器內 */
+            border-radius: 0.5rem; /* 圓角 */
+            flex-shrink: 0; /* 防止圖片在 flex 容器中縮小 */
+        }
+
+        /* 彈出視窗內文字的基礎樣式 */
+        .aspect-ratio-square p {
+            width: 100%;
+            height: 100%;
+            display: flex; /* 確保文字可以居中 */
+            align-items: center; /* 垂直居中 */
+            justify-content: center; /* 水平居中 */
+        }
+
+        /* 機會按鈕的背景樣式 */
+        .chance-button-bg {
+            background-image: url('https://imageio.forbes.com/specials-images/imageserve/614880fffd100271c655ed22/too-many-tasks/960x0.jpg?format=jpg&width=960'); /* 更新為新的背景圖片 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 命運按鈕的背景樣式 */
+        .destiny-button-bg {
+            background-image: url('https://i0.wp.com/ronweasley.com.tw/wp-content/uploads/2022/03/%E5%91%BD%E9%81%8B.jpg?w=730&ssl=1');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 隨薪所欲按鈕的背景樣式 */
+        .suixin-button-bg {
+            background-image: url('https://as2.ftcdn.net/jpg/02/49/98/87/1000_F_249988712_0HncIAfSV5Mm3tXnUfVlg49zLUjfPPPG.jpg'); /* 新增的背景圖片 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 薪盡自然涼按鈕的背景樣式 */
+        .xinjin-button-bg {
+            background-image: url('https://pic7.sucaisucai.com/12/04/12804727_2.jpg'); /* 新增的背景圖片 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 堅持按鈕的背景樣式 */
+        .lastminute-button-bg {
+            background-image: url('https://cdn.mos.cms.futurecdn.net/EsQKTU3ERMaPPFb53BJ5UG-970-80.jpg.webp'); /* 新增的背景圖片 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 我這麼可愛為什麼要上班按鈕的背景樣式 */
+        .cute-button-bg {
+            background-image: url('https://media.nownews.com/nn_media/thumbnail/2024/10/1728303475977-1f6a1fccafab4a419c2c6af6a50fbd70-800x450.webp?unShow=false'); /* 新增的背景圖片 */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+        }
+
+        /* 所有按鈕的通用俄羅斯輪盤背景樣式 */
+        .roulette-button-bg {
+            background-image: url('https://bkimg.cdn.bcebos.com/pic/77c6a7efce1b9d16f01edac1ffdeb48f8d5464b0');
+            background-size: cover; /* 覆蓋整個按鈕 */
+            background-position: center; /* 圖片置中 */
+            background-repeat: no-repeat; /* 不重複 */
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; /* 白字黑邊 */
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div id="roulette-background"></div>
+
+    <div class="flex flex-col space-y-2 p-6 bg-white bg-opacity-90 rounded-xl shadow-lg mb-8 z-10">
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105 chance-button-bg"
+            onclick="playSequence('salaryIncrease'); displayResult('chance')"
+        >
+            上班我有向薪力
+        </button>
+
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition duration-300 ease-in-out transform hover:scale-105 destiny-button-bg"
+            onclick="playSequence('unwillingToWork'); displayResult('destiny')"
+        >
+            一週總有5、6不想上班
+        </button>
+
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition duration-300 ease-in-out transform hover:scale-105 suixin-button-bg"
+            onclick="playSequence('suixin'); displayResult('suixin')"
+        >
+            隨薪所欲
+        </button>
+
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-4 focus:ring-red-300 transition duration-300 ease-in-out transform hover:scale-105 xinjin-button-bg"
+            onclick="playSequence('xinjin'); displayResult('xinjin')"
+        >
+            薪盡自然涼
+        </button>
+
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-yellow-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-yellow-300 transition duration-300 ease-in-out transform hover:scale-105 lastminute-button-bg"
+            onclick="playSequence('lastMinute'); displayResult('lastMinute')"
+        >
+            堅持到最後一分鐘起床，<br>是我一生唯一的堅持
+        </button>
+
+        <button
+            class="px-8 py-4 text-white font-bold text-lg rounded-full shadow-md hover:from-green-600 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition duration-300 ease-in-out transform hover:scale-105 cute-button-bg"
+            onclick="playSequence('cute'); displayResult('random')"
+        >
+            我這麼可愛為什麼要上班
+        </button>
+    </div>
+
+    <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4">
+        <div class="relative bg-white p-6 rounded-lg shadow-xl max-w-xl w-full flex flex-col items-center">
+            <div class="aspect-ratio-square mb-0">
+            </div>
+
+            <button
+                class="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300 mt-4"
+                onclick="hideResult()"
+            >
+                關閉
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 初始化一個 Tone.js FM 合成器
+        const synth = new Tone.FMSynth().toDestination();
+
+        // 初始化音訊效果器
+        // 殘響效果，讓聲音有空間感
+        const reverb = new Tone.Reverb({ decay: 2, wet: 0.5 }).toDestination();
+        // 合唱效果，讓聲音更豐富、有層次
+        const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination();
+
+        // 將合成器連接到效果器，再連接到最終輸出
+        synth.chain(chorus, reverb, Tone.Destination);
+
+        /**
+         * 播放指定類型的連續音效。
+         * @param {string} type - 音效類型，用於選擇音高和音色參數。
+         */
+        async function playSequence(type) {
+            // 確保音訊上下文在使用者互動後啟動，這是瀏覽器播放音訊的必要步驟
+            await Tone.start();
+
+            let notesAndDurations = []; // 儲存音符和持續時間的陣列
+            let synthParams = {}; // 用於設定 FMSynth 的參數
+            const delayBetweenNotes = '0.1s'; // 音符之間的固定延遲
+
+            switch (type) {
+                case 'salaryIncrease': // 上班我有向薪力 - 積極、上升的樂曲
+                    notesAndDurations = [
+                        { note: 'C5', duration: '0.45s' },
+                        { note: 'E5', duration: '0.45s' },
+                        { note: 'G5', duration: '0.45s' },
+                        { note: 'C6', duration: '0.45s' }
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.01, decay: 0.5, sustain: 0.1, release: 0.5 },
+                        modulation: { type: 'square' },
+                        modulationEnvelope: { attack: 0.01, decay: 0.2, sustain: 0.0, release: 0.2 },
+                        harmonicity: 1.5
+                    };
+                    break;
+                case 'unwillingToWork': // 一週總有5、6不想上班 - 略帶憂鬱、下降的樂曲
+                    notesAndDurations = [
+                        { note: 'A3', duration: '0.5s' },
+                        { note: 'F3', duration: '0.5s' },
+                        { note: 'D3', duration: '0.5s' },
+                        { note: 'C3', duration: '0.5s' }
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.1, decay: 1, sustain: 0.5, release: 1 },
+                        modulation: { type: 'sawtooth' },
+                        modulationEnvelope: { attack: 0.1, decay: 0.5, sustain: 0.0, release: 0.5 },
+                        harmonicity: 0.8
+                    };
+                    break;
+                case 'suixin': // 隨薪所欲 - 愉悅、鐘聲般的樂曲
+                    notesAndDurations = [
+                        { note: 'G4', duration: '0.45s' },
+                        { note: 'B4', duration: '0.45s' },
+                        { note: 'D5', duration: '0.45s' },
+                        { note: 'G5', duration: '0.45s' }
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.005, decay: 0.4, sustain: 0.0, release: 0.7 },
+                        modulation: { type: 'sine' },
+                        modulationEnvelope: { attack: 0.005, decay: 0.1, sustain: 0.0, release: 0.1 },
+                        harmonicity: 3
+                    };
+                    break;
+                case 'xinjin': // 薪盡自然涼 - 低落、消散的樂曲
+                    notesAndDurations = [
+                        { note: 'C3', duration: '0.6s' },
+                        { note: 'F#2', duration: '0.6s' },
+                        { note: 'C2', duration: '0.6s' },
+                        { note: 'G1', duration: '0.6s' }
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'sawtooth' },
+                        envelope: { attack: 0.2, decay: 1.2, sustain: 0.0, release: 1.5 },
+                        modulation: { type: 'sine' },
+                        modulationEnvelope: { attack: 0.2, decay: 1, sustain: 0.0, release: 1 },
+                        harmonicity: 0.5
+                    };
+                    break;
+                case 'lastMinute': // 堅持到最後一分鐘起床 - 緊迫、警示的樂曲
+                    notesAndDurations = [
+                        { note: 'E5', duration: '0.4s' },
+                        { note: 'G5', duration: '0.4s' },
+                        { note: 'C6', duration: '0.4s' },
+                        { note: 'E6', duration: '0.8s' } // 最後一個音符較長
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'square' },
+                        envelope: { attack: 0.01, decay: 0.3, sustain: 0.0, release: 0.3 },
+                        modulation: { type: 'sawtooth' },
+                        modulationEnvelope: { attack: 0.01, decay: 0.1, sustain: 0.0, release: 0.1 },
+                        harmonicity: 2.0
+                    };
+                    break;
+                case 'cute': // 我這麼可愛為什麼要上班 - 俏皮、泡泡般的樂曲
+                    notesAndDurations = [
+                        { note: 'D4', duration: '0.4s' },
+                        { note: 'F4', duration: '0.4s' },
+                        { note: 'A4', duration: '0.4s' },
+                        { note: 'D5', duration: '0.8s' } // 最後一個音符較長
+                    ];
+                    synthParams = {
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.02, decay: 0.3, sustain: 0.0, release: 0.3 },
+                        modulation: { type: 'sine' },
+                        modulationEnvelope: { attack: 0.02, decay: 0.1, sustain: 0.0, release: 0.1 },
+                        harmonicity: 0.5
+                    };
+                    break;
+            }
+
+            // 將特定參數應用到合成器
+            synth.set(synthParams);
+
+            // 播放音符序列
+            let currentTime = Tone.now();
+            notesAndDurations.forEach((item, index) => {
+                synth.triggerAttackRelease(item.note, item.duration, currentTime, 0.7); // 0.7 是音量
+                // 計算下一個音符的開始時間
+                currentTime += Tone.Time(item.duration).toSeconds() + Tone.Time(delayBetweenNotes).toSeconds();
+            });
+        }
+
+        // Define image URLs and text content
+        const content = {
+            // Salary increase image for "上班我有向薪力"
+            salaryIncreaseImage: {
+                type: 'image',
+                src: 'https://doqvf81n9htmm.cloudfront.net/data/changchi_177/%EF%BC%98%EF%BC%98%EF%BC%98/654654654654654654/%E7%B6%93%E6%BF%9F/shutterstock_445359364.jpg',
+                alt: '薪水增加圖片'
+            },
+            chance: {
+                type: 'image',
+                // Lexus LBX image link (now only used in random combos)
+                src: 'https://img.ltn.com.tw/Upload/auto/page/2024/01/12/240112-24729-1-TciCn.jpg',
+                alt: 'Lexus LBX 圖片'
+            },
+            destiny: {
+                type: 'image', // Type is image (Money image, now only used in random combos)
+                // NT$1,000,000 image link
+                src: 'https://img.ltn.com.tw/Upload/news/600/2019/08/17/235.jpg',
+                alt: 'NT$1,000,000 圖片'
+            },
+            // Flexpresets image (now fixed for "一週總有5、6不想上班" and also in random combos)
+            flexpresetsImage: {
+                type: 'image',
+                src: 'https://flexpresets.com/wp-content/smush-webp/2024/03/8-1.jpg.webp',
+                alt: 'Flexpresets 圖片'
+            },
+            // Bankruptcy image (Shutterstock image)
+            bankruptcyImage: {
+                type: 'image',
+                src: 'https://www.sawinlaw.com/wp-content/uploads/2018/09/shutterstock_605354063-1536x1027.jpg',
+                alt: '破產圖片'
+            },
+            // Kaohsiung Food image
+            khhFoodImage: {
+                type: 'image',
+                src: 'https://khh.travel/images/static/4-1-food-11.jpg',
+                alt: '高雄美食圖片'
+            },
+            // Running Man image for "堅持到最後一分鐘起床，是我一生唯一的堅持"
+            runningManImage: {
+                type: 'image',
+                src: 'https://www.taylorintime.com/wp-content/uploads/2019/05/busyness_hougaard-1-980x613.jpg',
+                alt: '奔跑的上班族圖片'
+            }
+        };
+
+        // Define all combinable items (used for 'random' button combinations)
+        const combinableItems = ['chance', 'destiny', 'flexpresetsImage', 'khhFoodImage'];
+        let generatedCombinations = [];
+
+        // Generate all non-empty combinations with more than one item
+        for (let i = 1; i < (1 << combinableItems.length); i++) {
+            let currentCombination = [];
+            for (let j = 0; j < combinableItems.length; j++) {
+                if ((i >> j) & 1) {
+                    currentCombination.push(combinableItems[j]);
+                }
+            }
+            // Only add combinations with more than one item
+            if (currentCombination.length > 1) {
+                generatedCombinations.push(currentCombination);
+            }
+        }
+
+        // Display result
+        function displayResult(choice) {
+            const resultModal = document.getElementById('resultModal');
+            const aspectRatioContainer = document.querySelector('#resultModal .aspect-ratio-square');
+            aspectRatioContainer.innerHTML = ''; // Clear previously displayed content
+
+            let itemsToDisplay = []; // Store keys of content to display
+
+            if (choice === 'random') { // "我這麼可愛為什麼要上班" 按鈕
+                const randomIndex = Math.floor(Math.random() * generatedCombinations.length);
+                itemsToDisplay = generatedCombinations[randomIndex];
+                console.log(`"我這麼可愛為什麼要上班" 的結果是：隨機組合！`, itemsToDisplay);
+
+            } else if (choice === 'chance') { // "上班我有向薪力" 按鈕
+                itemsToDisplay = ['salaryIncreaseImage']; // 固定顯示薪水增加圖片
+                console.log(`"上班我有向薪力" 的結果是：薪水增加！`, itemsToDisplay);
+            } else if (choice === 'destiny') { // "一週總有5、6不想上班" 按鈕
+                itemsToDisplay = ['flexpresetsImage']; // 固定顯示 Flexpresets 圖片
+                console.log(`"一週總有5、6不想上班" 的結果是：Flexpresets 圖片！`, itemsToDisplay);
+            } else if (choice === 'suixin') { // "隨薪所欲" 按鈕
+                itemsToDisplay = ['khhFoodImage']; // 固定顯示高雄美食圖片
+                console.log(`"隨薪所欲" 的結果是：高雄美食圖片！`, itemsToDisplay);
+            } else if (choice === 'xinjin') { // "薪盡自然涼" 按鈕
+                itemsToDisplay = ['bankruptcyImage']; // 固定顯示破產圖片
+                console.log(`"薪盡自然涼" 的結果是：破產！`, itemsToDisplay);
+            } else if (choice === 'lastMinute') { // "堅持到最後一分鐘起床，是我一生唯一的堅持" 按鈕
+                itemsToDisplay = ['runningManImage']; // 固定顯示奔跑的上班族圖片
+                console.log(`"堅持到最後一分鐘起床，是我一生唯一的堅持" 的結果是：奔跑的上班族！`, itemsToDisplay);
+            } else {
+                // Default case, if there are other single options in the future (unlikely with current setup)
+                itemsToDisplay = [choice];
+            }
+
+            // Adjust image width based on number of items
+            const numItems = itemsToDisplay.length;
+            let itemWidthClass = 'w-full'; // Default to full width (for single image)
+            if (numItems === 2) {
+                // For 2 items, each image takes 48% width to fill more space in a square
+                itemWidthClass = 'w-[48%]';
+            } else if (numItems === 3) {
+                // For 3 items, each image takes 31% width to fit well in a square
+                itemWidthClass = 'w-[31%]';
+            } else if (numItems === 4) { // For 4 items
+                itemWidthClass = 'w-[22%]'; // Each image takes 22% width
+            }
+            // If numItems is 1 (which will be salaryIncreaseImage, bankruptcyImage, flexpresetsImage, khhFoodImage, or runningManImage), keep w-full
+
+            // Dynamically create and add content (image or text)
+            itemsToDisplay.forEach((key, index) => {
+                const itemContent = content[key];
+                if (itemContent.type === 'image') {
+                    const img = document.createElement('img');
+                    img.src = itemContent.src;
+                    img.alt = itemContent.alt;
+                    // Tailwind CSS classes to ensure image displays correctly in flex container
+                    img.className = `object-contain rounded-lg ${itemWidthClass} h-auto`;
+                    // If image fails to load, display a placeholder image
+                    img.onerror = "this.onerror=null;this.src='https://placehold.co/400x250/cccccc/333333?text=無法載入圖片';";
+                    aspectRatioContainer.appendChild(img);
+                } else if (itemContent.type === 'text') {
+                    // If there is text content, dynamically create a P tag
+                    const p = document.createElement('p');
+                    p.innerText = itemContent.value;
+                    p.className = `text-3xl font-bold text-gray-800 text-center ${itemWidthClass}`;
+                    aspectRatioContainer.appendChild(p);
+                }
+
+                // Add "+" sign if it's not the last item and there are multiple items
+                if (numItems > 1 && index < numItems - 1) {
+                    const plusSpan = document.createElement('span');
+                    plusSpan.innerText = '+';
+                    // Style the plus sign to be visible on the white modal background
+                    plusSpan.className = 'text-gray-800 text-3xl font-bold';
+                    aspectRatioContainer.appendChild(plusSpan);
+                }
+            });
+
+            resultModal.classList.remove('hidden'); // Show the modal
+        }
+
+        function hideResult() {
+            document.getElementById('resultModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+
